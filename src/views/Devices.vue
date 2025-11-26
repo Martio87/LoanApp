@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useProducts } from '@/composables/useProducts';
+import { useDevices } from '@/composables/useDevices';
 
-const { products, loading, error, fetchProducts } = useProducts();
+const { devices, loading, error, fetchDevices } = useDevices();
 
 onMounted(() => {
-  fetchProducts();
+  fetchDevices();
 });
 
 const formatPrice = (p?: number) =>
@@ -13,32 +13,30 @@ const formatPrice = (p?: number) =>
 </script>
 
 <template>
-  <div class="products-view">
-    <h1>Products</h1>
+  <div class="devices-view">
+    <h1>Devices</h1>
 
-    <div v-if="loading" class="loading">Loading products…</div>
+    <div v-if="loading" class="loading">Loading devices…</div>
     <div v-else-if="error" class="error">
       <p>Error: {{ error }}</p>
-      <button @click="fetchProducts(true)">Retry</button>
+      <button @click="fetchDevices(true)">Retry</button>
     </div>
-    <div v-else-if="products.length === 0" class="empty">
-      No products found.
-    </div>
+    <div v-else-if="devices.length === 0" class="empty">No devices found.</div>
 
     <ul v-else class="list">
-      <li v-for="p in products" :key="p.id" class="card">
+      <li v-for="d in devices" :key="d.id" class="card">
         <div class="row">
-          <strong class="name">{{ p.name }}</strong>
-          <span class="price">{{ formatPrice(p.pricePence) }}</span>
+          <strong class="name">{{ d.name }}</strong>
+          <!-- span class="price">{{ formatPrice(d.pricePence) }}</span -->
         </div>
-        <p v-if="p.description" class="desc">{{ p.description }}</p>
+        <p v-if="d.model" class="desc">{{ d.model }}</p>
       </li>
     </ul>
   </div>
 </template>
 
 <style scoped>
-.products-view {
+.devices-view {
   max-width: 960px;
   margin: 0 auto;
   padding: 2rem;
