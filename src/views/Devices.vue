@@ -29,7 +29,9 @@ const formatPrice = (p?: number) =>
           <strong class="name">{{ d.name }}</strong>
           <!-- span class="price">{{ formatPrice(d.pricePence) }}</span -->
         </div>
-        <p v-if="d.model" class="desc">{{ d.model }}</p>
+        <p v-if="d.model || d.description" class="desc">
+          {{ d.model ?? d.description }}
+        </p>
       </li>
     </ul>
   </div>

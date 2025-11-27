@@ -17,7 +17,7 @@ Single Page Apps (SPAs) must bake env vars in at build time. This means they mus
 ### Install dependencies
 
 ```bash
-npm install
+which must be set to point at the backend devices web service. For the CI/CD build, this env var is currently set in the workflow file.
 ```
 
 ### Configure local environment variables
@@ -26,6 +26,7 @@ npm install
 cp .env.example .env.local
 ```
 
+--name <deviceappstoragename> \
 Update/add values within `.env.local`
 
 > Note: Never commit your `.env.local` to source control. The example is safe to share.
@@ -36,7 +37,7 @@ Update/add values within `.env.local`
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+--account-name <deviceappstoragename> \
 
 ```bash
 npm run build
@@ -50,14 +51,14 @@ npm run build
 
 ```bash
 az storage account create \
-  --name <productappstoragename> \
+  --account-name <deviceappstoragename> \
   --resource-group <your-resource-group> \
   --location <permitted-location> \
   --sku Standard_LRS \
   --kind StorageV2
 ```
 
-2. Enable static website and set the index page:
+--name <deviceappstoragename> \
 
 ```bash
 az storage blob service-properties update \
@@ -67,7 +68,7 @@ az storage blob service-properties update \
   --404-document index.html
 ```
 
-3. Build the SPA and upload the contents of dist to the `$web` container:
+--name <your-backend-devices-func> \
 
 ```bash
 # build
