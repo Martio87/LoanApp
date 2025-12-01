@@ -7,9 +7,6 @@ const { devices, loading, error, fetchDevices } = useDevices();
 onMounted(() => {
   fetchDevices();
 });
-
-const formatPrice = (p?: number) =>
-  p === undefined ? '—' : `£${(p / 100).toFixed(2)}`;
 </script>
 
 <template>
@@ -27,8 +24,7 @@ const formatPrice = (p?: number) =>
       <li v-for="d in devices" :key="d.id" class="card">
         <div class="row">
           <strong class="name">{{ d.name }}</strong>
-          <!-- span class="price">{{ formatPrice(d.pricePence) }}</span -->
-        </div>
+                </div>
         <p v-if="d.model || d.description" class="desc">
           {{ d.model ?? d.description }}
         </p>
@@ -63,10 +59,6 @@ const formatPrice = (p?: number) =>
 }
 .name {
   color: #1f2937;
-}
-.price {
-  color: #065f46;
-  font-weight: 600;
 }
 .desc {
   color: #6b7280;

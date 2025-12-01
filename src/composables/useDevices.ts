@@ -4,7 +4,6 @@ import { appConfig } from '@/config/appConfig';
 export type Device = {
   id: string;
   name: string;
-  pricePence?: number;
   model?: string;
   description?: string;
 };
@@ -22,8 +21,7 @@ export function useDevices() {
     error.value = null;
     try {
       // Try several candidate endpoints so the frontend can work with
-      // different backend route configurations (e.g. /api/devices vs /devices
-      // or legacy /products).
+      // different backend route configurations (e.g. /api/devices vs /devices).
       const tried: string[] = [];
       const results: string[] = [];
 
@@ -35,11 +33,6 @@ export function useDevices() {
         const baseNoApi = API_BASE.replace(/\/api\/?$/i, '/');
         if (baseNoApi !== API_BASE) {
           list.push(new URL('device', baseNoApi).toString());
-        }
-        // Also try legacy 'products' endpoints in case backend still exposes those
-        list.push(new URL('products', API_BASE).toString());
-        if (baseNoApi !== API_BASE) {
-          list.push(new URL('products', baseNoApi).toString());
         }
         return Array.from(new Set(list));
       })();
