@@ -5,5 +5,5 @@
 </template>
 
 <style scoped>
-/* basic app container styling can go here if needed */
+/* basic app container styling can go here if needed later */
 </style>
