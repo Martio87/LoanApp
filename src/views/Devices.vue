@@ -36,14 +36,31 @@ watch(isAuthenticated, () => {
             <span class="model">{{ d.model }}</span>
           </div>
         </template>
-        <!-- Authenticated view: full details -->
+        <!-- Authenticated view: availability and stock -->
         <template v-else>
           <div class="row">
-            <strong class="name">{{ d.name }}</strong>
+            <strong class="model-name">{{ d.model }}</strong>
+            <span
+              class="availability"
+              :class="{
+                available: d.availability === 'available' || !d.availability,
+                'on-loan': d.availability === 'on-loan',
+                maintenance: d.availability === 'maintenance',
+              }"
+            >
+              {{
+                d.availability === 'on-loan'
+                  ? 'On Loan'
+                  : d.availability === 'maintenance'
+                    ? 'Maintenance'
+                    : 'Available'
+              }}
+            </span>
           </div>
-          <p v-if="d.model || d.description" class="desc">
-            {{ d.model ?? d.description }}
-          </p>
+          <div class="stock-row">
+            <span class="manufacturer">{{ d.manufacturer }}</span>
+            <span class="stock">In Stock: {{ d.stockCount ?? 1 }}</span>
+          </div>
         </template>
       </li>
     </ul>
@@ -82,12 +99,34 @@ watch(isAuthenticated, () => {
 .model {
   color: #6b7280;
 }
-.name {
+.model-name {
+  font-weight: 600;
   color: #1f2937;
 }
-.desc {
-  color: #6b7280;
+.availability {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+.available {
+  background: #d1fae5;
+  color: #065f46;
+}
+.unavailable {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.stock-row {
+  display: flex;
+  justify-content: space-between;
   margin-top: 0.5rem;
+}
+.manufacturer {
+  color: #6b7280;
+}
+.stock {
+  font-size: 0.85rem;
+  color: #4b5563;
 }
 .loading,
 .error,

@@ -8,6 +8,8 @@ export type Device = {
   model?: string;
   manufacturer?: string;
   description?: string;
+  availability?: 'available' | 'on-loan' | 'maintenance';
+  stockCount?: number;
 };
 
 const API_BASE = appConfig.apiBaseUrl;
