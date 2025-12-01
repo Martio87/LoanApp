@@ -21,7 +21,7 @@ export function useDevices() {
     error.value = null;
     try {
       // Try several candidate endpoints so the frontend can work with
-      // different backend route configurations (e.g. /api/devices vs /devices).
+      // different backend route configurations.
       const tried: string[] = [];
       const results: string[] = [];
 
