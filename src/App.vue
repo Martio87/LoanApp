@@ -15,6 +15,16 @@ const showContent = () => isAuthenticated.value || isGuest.value;
 const handleGuest = () => {
   isGuest.value = true;
 };
+
+const handleLogin = async () => {
+  try {
+    console.log('Starting login...');
+    await loginWithRedirect();
+  } catch (error) {
+    console.error('Login error:', error);
+    alert('Login failed: ' + error);
+  }
+};
 </script>
 <template>
   <div class="app">
@@ -24,9 +34,7 @@ const handleGuest = () => {
         <h1>Loan App</h1>
         <p>Manage your devices and loans</p>
         <div class="landing-buttons">
-          <button class="btn-primary" @click="loginWithRedirect()">
-            Sign in
-          </button>
+          <button class="btn-primary" @click="handleLogin">Sign in</button>
           <button class="btn-secondary" @click="handleGuest">
             Continue as Guest
           </button>
