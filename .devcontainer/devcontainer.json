@@ -1,6 +1,6 @@
 {
   "name": "DevOps Starter Kit",
-  "image": "ghcr.io/tpdavison/devops-labs:v1.1.1",
+  "image": "ghcr.io/tpdavison/devops-labs:v1.1",
 
   "features": {},
 

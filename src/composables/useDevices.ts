@@ -24,9 +24,19 @@ export function useDevices() {
     if (loading.value && !force) return;
     loading.value = true;
     error.value = null;
+    let url: string | undefined;
     try {
-      // Build the API URL
-      const url = `${API_BASE.replace(/\/$/, '')}/device`;
+      // Build the API URL (try plural endpoint first, then fall back)
+      const base = API_BASE.replace(/\/$/, '');
+      const pluralUrl = `${base}/devices`;
+      const singularUrl = `${base}/device`;
+      url = pluralUrl;
+
+      // Diagnostic log: show which API base and URL we're calling so it's
+      // easier to debug 'Failed to fetch' errors in the browser console.
+      // Keep this at debug level so it can be removed or filtered easily.
+      // eslint-disable-next-line no-console
+      console.debug('[useDevices] API_BASE=', API_BASE, ' -> url=', url);
 
       const headers: Record<string, string> = {
         Accept: 'application/json',
@@ -40,7 +50,18 @@ export function useDevices() {
         }
       }
 
-      const res = await fetch(url, { headers });
+      // Try plural endpoint first. If it returns 404, try the older singular
+      // endpoint for backward compatibility.
+      let res = await fetch(url, { headers });
+      if (!res.ok && res.status === 404) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          '[useDevices] plural endpoint 404, trying singular:',
+          singularUrl,
+        );
+        url = singularUrl;
+        res = await fetch(url, { headers });
+      }
       if (!res.ok) {
         throw new Error(`${res.status} ${res.statusText}`);
       }
@@ -52,7 +73,36 @@ export function useDevices() {
       devices.value = Array.isArray(deviceArray) ? deviceArray : [];
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      error.value = `Failed to load devices: ${msg}`;
+
+      // Provide a slightly more actionable error when it's the generic
+      // `Failed to fetch` browser network error which commonly indicates
+      // mixed-content (HTTPS page calling HTTP), CORS/network or DNS issues.
+      let hint = '';
+      try {
+        const attempted = new URL(url ?? '', window.location.href);
+        if (msg === 'Failed to fetch') {
+          if (attempted.protocol !== window.location.protocol) {
+            hint =
+              ' (possible mixed-content: page is ' +
+              window.location.protocol +
+              ' but API is ' +
+              attempted.protocol +
+              ')';
+          } else if (
+            attempted.hostname === 'localhost' &&
+            window.location.hostname !== 'localhost'
+          ) {
+            hint =
+              ' (attempting to contact localhost from a remote browser — backend may be unreachable)';
+          } else {
+            hint = ' (network/CORS/misconfigured URL)';
+          }
+        }
+      } catch {
+        // ignore URL parse errors
+      }
+
+      error.value = `Failed to load devices: ${msg}${hint}`;
     } finally {
       loading.value = false;
     }
