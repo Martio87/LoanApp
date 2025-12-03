@@ -13,6 +13,8 @@ export function loadAppConfig(): AppConfig {
   // Users can still explicitly set a full URL via VITE_API_BASE_URL when needed.
   let apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string) ?? '/api/';
 
+  console.debug('[appConfig] Loaded VITE_API_BASE_URL=', apiBaseUrl);
+
   // If a developer accidentally left a local http://localhost URL in the
   // environment but the app is running on a non-localhost origin (for
   // example an HTTPS preview site), that will cause "Failed to fetch"

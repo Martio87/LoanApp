@@ -19,12 +19,12 @@ export default defineConfig({
     watch: {
       usePolling: true, // Required for file watching in some container environments
     },
-    proxy: {
-      '/api': {
-        target: 'https://device-test-mm38-func.azurewebsites.net',
-        changeOrigin: true,
-        secure: true,
-      },
-    },
+    // proxy: {
+    //   '/api': {
+    //     target: 'https://device-test-mm38-func.azurewebsites.net',
+    //     changeOrigin: true,
+    //     secure: true,
+    //   },
+    // },
   },
 });

@@ -28,7 +28,7 @@ export function useDevices() {
     try {
       // Build the API URL (try plural endpoint first, then fall back)
       const base = API_BASE.replace(/\/$/, '');
-      const pluralUrl = `${base}/devices`;
+      const pluralUrl = `${base}/device`;
       const singularUrl = `${base}/device`;
       url = pluralUrl;
 
@@ -51,7 +51,12 @@ export function useDevices() {
       }
 
       // Try plural endpoint first. If it returns 404, try the older singular
-      // endpoint for backward compatibility.
+      // endpoint for backward compatibility. If both fail and the app was
+      // built with a relative `/api/` base (common for static site + remote
+      // API setups), attempt to fall back to the configured Auth0 audience
+      // when that audience is a full URL (many projects set the audience to
+      // the API's base URL). This avoids a 404 from the static site's own
+      // `/api/` path when the actual API lives on a different host.
       let res = await fetch(url, { headers });
       if (!res.ok && res.status === 404) {
         // eslint-disable-next-line no-console
@@ -62,8 +67,49 @@ export function useDevices() {
         url = singularUrl;
         res = await fetch(url, { headers });
       }
+
+      // If both plural/singular returned 404 and we have an auth audience
+      // that looks like an absolute URL, try that as a fallback API base.
+      if (!res.ok && res.status === 404) {
+        const audience = appConfig.auth0?.audience;
+        if (
+          audience &&
+          typeof audience === 'string' &&
+          /^https?:\/\//i.test(audience)
+        ) {
+          const audBase = audience.replace(/\/$/, '');
+          const audUrl = `${audBase}/devices`;
+          // eslint-disable-next-line no-console
+          console.debug(
+            '[useDevices] trying auth0 audience URL fallback:',
+            audUrl,
+          );
+          url = audUrl;
+          res = await fetch(url, { headers });
+          if (!res.ok && res.status === 404) {
+            // try singular at audience base
+            const audSingular = `${audBase}/device`;
+            // eslint-disable-next-line no-console
+            console.debug(
+              '[useDevices] audience singular fallback:',
+              audSingular,
+            );
+            url = audSingular;
+            res = await fetch(url, { headers });
+          }
+        }
+      }
+
       if (!res.ok) {
-        throw new Error(`${res.status} ${res.statusText}`);
+        // Try to include any response text to make the error actionable.
+        let bodyText = '';
+        try {
+          bodyText = await res.text();
+        } catch {
+          // ignore
+        }
+        const statusMsg = `${res.status} ${res.statusText}`.trim();
+        throw new Error(bodyText ? `${statusMsg}: ${bodyText}` : statusMsg);
       }
       const data = await res.json();
       // Handle both direct array responses and wrapped responses like { data: [...] }
