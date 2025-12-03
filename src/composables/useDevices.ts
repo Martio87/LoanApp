@@ -223,28 +223,9 @@ export function useDevices() {
         throw new Error(body || `${res.status} ${res.statusText}`);
       }
 
-      // optimistic UI update: set device to on-loan and decrement stock
-      const idx = devices.value.findIndex((d) => d.id === id);
-      if (idx !== -1) {
-        const old = devices.value[idx]!;
-        const updated: Device = {
-          id: old.id,
-          name: old.name,
-          model: old.model,
-          manufacturer: old.manufacturer,
-          description: old.description,
-          availability: 'on-loan',
-          stockCount:
-            typeof old.stockCount === 'number'
-              ? Math.max(0, old.stockCount - 1)
-              : old.stockCount,
-        };
-        devices.value = [
-          ...devices.value.slice(0, idx),
-          updated,
-          ...devices.value.slice(idx + 1),
-        ];
-      }
+      // On success remove the reserved device from the local list so it
+      // doesn't overlap with other reservations in the UI.
+      devices.value = devices.value.filter((d) => d.id !== id);
 
       return true;
     } catch (e) {
