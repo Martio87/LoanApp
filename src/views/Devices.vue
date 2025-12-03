@@ -12,7 +12,7 @@ onMounted(() => {
 });
 
 watch(isAuthenticated, () => {
-  // Re-fetch when auth state changes to reflect public vs private data
+  // Re-fetch when auth state changes to reflect public vs private data.
   fetchDevices(true);
 });
 </script>
