@@ -19,6 +19,7 @@ export function useDevices() {
   const devices: Ref<Device[]> = ref([]);
   const loading = ref(false);
   const error: Ref<string | null> = ref(null);
+  const reserving: Ref<Record<string, boolean>> = ref({});
 
   const fetchDevices = async (force = false) => {
     if (loading.value && !force) return;
@@ -154,5 +155,106 @@ export function useDevices() {
     }
   };
 
-  return { devices, loading, error, fetchDevices };
+  const reserveDevice = async (id: string) => {
+    // Assumptions: the API exposes a POST /devices/:id/reserve or
+    // POST /device/:id/reserve endpoint. We'll try plural then singular,
+    // and fall back to the Auth0 audience host if needed (similar to fetch).
+    if (reserving.value[id]) return false;
+    reserving.value = { ...reserving.value, [id]: true };
+    let url: string | undefined;
+    try {
+      const base = API_BASE.replace(/\/$/, '');
+      const tryUrls = [
+        `${base}/devices/${id}/reserve`,
+        `${base}/device/${id}/reserve`,
+      ];
+
+      const headers: Record<string, string> = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      };
+      if (isAuthenticated.value) {
+        try {
+          const token = await getAccessTokenSilently();
+          if (token) headers.Authorization = `Bearer ${token}`;
+        } catch {
+          // proceed without token
+        }
+      }
+
+      let res: Response | null = null;
+      for (const u of tryUrls) {
+        url = u;
+        // eslint-disable-next-line no-console
+        console.debug('[useDevices] reserve attempt url=', url);
+        res = await fetch(url, { method: 'POST', headers });
+        if (res.ok || res.status !== 404) break; // stop if not a 404 (either success or real error)
+      }
+
+      // fallback to audience base if 404
+      if (res && res.status === 404) {
+        const audience = appConfig.auth0?.audience;
+        if (
+          audience &&
+          typeof audience === 'string' &&
+          /^https?:\/\//i.test(audience)
+        ) {
+          const audBase = audience.replace(/\/$/, '');
+          const audTry = [
+            `${audBase}/devices/${id}/reserve`,
+            `${audBase}/device/${id}/reserve`,
+          ];
+          for (const u of audTry) {
+            url = u;
+            // eslint-disable-next-line no-console
+            console.debug('[useDevices] reserve audience attempt url=', url);
+            res = await fetch(url, { method: 'POST', headers });
+            if (res.ok || res.status !== 404) break;
+          }
+        }
+      }
+
+      if (!res) throw new Error('No response from server');
+      if (!res.ok) {
+        let body = '';
+        try {
+          body = await res.text();
+        } catch {}
+        throw new Error(body || `${res.status} ${res.statusText}`);
+      }
+
+      // optimistic UI update: set device to on-loan and decrement stock
+      const idx = devices.value.findIndex((d) => d.id === id);
+      if (idx !== -1) {
+        const old = devices.value[idx]!;
+        const updated: Device = {
+          id: old.id,
+          name: old.name,
+          model: old.model,
+          manufacturer: old.manufacturer,
+          description: old.description,
+          availability: 'on-loan',
+          stockCount:
+            typeof old.stockCount === 'number'
+              ? Math.max(0, old.stockCount - 1)
+              : old.stockCount,
+        };
+        devices.value = [
+          ...devices.value.slice(0, idx),
+          updated,
+          ...devices.value.slice(idx + 1),
+        ];
+      }
+
+      return true;
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('[useDevices] reserve failed', e, 'url=', url);
+      return false;
+    } finally {
+      reserving.value = { ...reserving.value, [id]: false };
+    }
+  };
+
+  return { devices, loading, error, fetchDevices, reserving, reserveDevice };
 }

@@ -2,9 +2,10 @@
 import { onMounted, watch } from 'vue';
 import { useDevices } from '@/composables/useDevices';
 
-const { devices, loading, error, fetchDevices } = useDevices();
+const { devices, loading, error, fetchDevices, reserving, reserveDevice } =
+  useDevices();
 import { useAuth0 } from '@auth0/auth0-vue';
-const { isAuthenticated } = useAuth0();
+const { isAuthenticated, loginWithRedirect } = useAuth0();
 
 onMounted(() => {
   fetchDevices();
@@ -60,6 +61,21 @@ watch(isAuthenticated, () => {
           <div class="stock-row">
             <span class="manufacturer">{{ d.manufacturer }}</span>
             <span class="stock">In Stock: {{ d.stockCount ?? 1 }}</span>
+            <button
+              class="reserve-btn"
+              :disabled="
+                (d.availability ?? '') === 'on-loan' ||
+                (d.availability ?? '') === 'maintenance' ||
+                reserving[d.id]
+              "
+              @click="
+                isAuthenticated ? reserveDevice(d.id) : loginWithRedirect()
+              "
+            >
+              <span v-if="!isAuthenticated">Sign in to Reserve</span>
+              <span v-else-if="reserving[d.id]">Reserving…</span>
+              <span v-else>Reserve</span>
+            </button>
           </div>
         </template>
       </li>
