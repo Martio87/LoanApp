@@ -214,6 +214,66 @@ export function useDevices() {
         }
       }
 
+      // If we still have a 404, try endpoints that accept the id in the
+      // request body (common pattern: POST /devices/reserve { id }). This
+      // increases compatibility with different backend shapes.
+      if (res && res.status === 404) {
+        const bodyPayload = JSON.stringify({ id });
+        const tryBodyUrls = [
+          `${base}/devices/reserve`,
+          `${base}/device/reserve`,
+          `${base}/reserve`,
+        ];
+        for (const u of tryBodyUrls) {
+          url = u;
+          // eslint-disable-next-line no-console
+          console.debug(
+            '[useDevices] reserve attempt (body) url=',
+            url,
+            'payload=',
+            bodyPayload,
+          );
+          res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: bodyPayload,
+          });
+          if (res.ok || res.status !== 404) break;
+        }
+
+        if (res && res.status === 404) {
+          const audience = appConfig.auth0?.audience;
+          if (
+            audience &&
+            typeof audience === 'string' &&
+            /^https?:\/\//i.test(audience)
+          ) {
+            const audBase = audience.replace(/\/$/, '');
+            const audBodyUrls = [
+              `${audBase}/devices/reserve`,
+              `${audBase}/device/reserve`,
+              `${audBase}/reserve`,
+            ];
+            for (const u of audBodyUrls) {
+              url = u;
+              // eslint-disable-next-line no-console
+              console.debug(
+                '[useDevices] reserve audience attempt (body) url=',
+                url,
+                'payload=',
+                bodyPayload,
+              );
+              res = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: bodyPayload,
+              });
+              if (res.ok || res.status !== 404) break;
+            }
+          }
+        }
+      }
+
       if (!res) throw new Error('No response from server');
       if (!res.ok) {
         let body = '';
