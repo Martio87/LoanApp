@@ -1,4 +1,4 @@
-name: Build and Deploy to Test #added to push to github.
+name: Build and Deploy to Test 
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
 
       - name: Deploy to Azure Storage Static Website
         run: |
