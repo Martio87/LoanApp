@@ -1,4 +1,4 @@
-name: Build and Deploy to Test 
+name: Build and Deploy to Test
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      VITE_API_BASE_URL: https://device-test-mm38-func.azurewebsites.net/api/
+      VITE_API_BASE_URL: https://loanappdevmm38funcstore.z1.web.core.windows.net # Change to your deployed test backend
 
     steps:
       - name: Checkout code
@@ -36,9 +36,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Azure Login
-        uses: azure/login@v2
+      - name: Deploy to Azure Storage Static Website
+        uses: azure/CLI@v2
         with:
-          creds: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-
-      # Deploy to Azure Storage Static Website
+          inlineScript: |
+            az storage blob upload-batch \
+              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+              --destination '$web' \
+              --source dist \
+              --overwrite true
