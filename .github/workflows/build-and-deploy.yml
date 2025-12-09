@@ -36,15 +36,14 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Deploy to Azure Storage Static Website
-        run: |
-          az storage blob upload-batch \
-            --account-name loanappmm38store \
-            --destination '$web' \
-            --source dist \
-            --overwrite true
+        - name: Deploy to Azure Storage Static Website
+          uses: azure/CLI@v2
+          env:
+            AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          with:
+            inlineScript: |
+              az storage blob upload-batch \
+                --account-name loanappdevmm38funcstore \
+                --destination '$web' \
+                --source dist \
+                --overwrite true
