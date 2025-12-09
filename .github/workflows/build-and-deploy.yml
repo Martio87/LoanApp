@@ -1,4 +1,4 @@
-name: Build and Deploy to Test 
+name: Build and Deploy to Test #added to push to github.
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
         with:
           inlineScript: |
             az storage blob upload-batch \
-              --account-name loanappmm38store \
+              --account-name loanappdevmm38funcstore \
               --destination '$web' \
               --source dist \
               --overwrite true
