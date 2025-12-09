@@ -1,4 +1,4 @@
-name: Build and Deploy to Test #addeded to push to main.
+name: Build and Deploy to Test 
 
 on:
   push:
